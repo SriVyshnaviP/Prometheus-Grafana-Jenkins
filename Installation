@@ -1,0 +1,228 @@
+## Java 21
+ sudo apt update
+sudo apt install -y wget apt-transport-https gnupg
+wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo gpg --dearmor -o /usr/share/keyrings/adoptium.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt update
+sudo apt install -y temurin-21-jdk
+
+-------------------------------------------
+ java --version
+openjdk 21.0.9 2025-10-21 LTS
+OpenJDK Runtime Environment Temurin-21.0.9+10 (build 21.0.9+10-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.9+10 (build 21.0.9+10-LTS, mixed mode, sharing)
+-----------------------------------------------
+## Jenkins-installation ###
+sudo apt update -y
+sudo apt install openjdk-17-jdk -y
+sudo apt update -y
+sudo apt install maven -y
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update -y
+sudo apt install jenkins -y
+service jenkins start
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+sudo systemctl restart jenkins
+http://13.235.17.168:8080/
+---Plugin--------
+STEP 3 — Install Prometheus Jenkins Plugin
+On the Jenkins UI:
+Manage Jenkins → Plugins → Available → Search Prometheus Metrics Plugin → Install → Restart
+Enable the endpoint:
+Manage Jenkins → Configure System → Prometheus
+✔️ Enable
+📍 Endpoint: /prometheus
+Verify metrics:
+http://<jenkins-ip>:8080/prometheus
+
+
+http://13.235.17.168:8080/prometheus/
+--------------------------------------------------------------------------
+cd /opt
+################node exporter ###########
+
+ wget https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz
+ls
+node_exporter-1.10.2.linux-amd64.tar.gz
+root@ip-172-31-33-160:/opt# tar xvfz node_exporter-1.10.2.linux-amd64.tar.gz
+
+ ls
+node_exporter-1.10.2.linux-amd64  node_exporter-1.10.2.linux-amd64.tar.gz
+root@ip-172-31-33-160:/opt# sudo mv node_exporter-*/node_exporter /usr/local/bin/
+
+sudo mv node_exporter-*/node_exporter /usr/local/bin/
+
+root@ip-172-31-33-160:/opt# systemctl status node_exporter
+
+systemctl start node_exporter
+root@ip-172-31-33-160:/opt# systemctl status node_exporter
+● node_exporter.service - Node Exporter
+     Loaded: loaded (/etc/systemd/system/node_exporter.service; enabled; preset: enabled)
+     Active: active (running) since Sat 2025-11-22 14:07:51 UTC; 1s ago
+   Main PID: 8316 (node_exporter)
+      Tasks: 4 (limit: 9296)
+     Memory: 5.7M (peak: 6.0M)
+        CPU: 27ms
+     CGroup: /system.slice/node_exporter.service
+             └─8316 /usr/local/bin/node_exporter
+
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.055Z level=INFO source=node_exporter.go:141 msg=time
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=timex
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=udp_queues
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=uname
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=vmstat
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=watchdog
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=xfs
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=zfs
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=tls_config.go:346 msg="Listening on" address=[::]:9100
+Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=tls_config.go:349 msg="TLS is disabled." http2=false >
+
+http://<jenkins-ip>:9100/metrics
+---------------------
+###############3Prometheus################3
+ wget https://github.com/prometheus/prometheus/releases/download/v2.34.0/prometheus-2.34.0.linux-amd64.tar.gz
+
+ ls
+prometheus-2.34.0.linux-amd64.tar.gz
+ubuntu@ip-172-31-33-160:~$ tar zxvf prometheus-2.34.0.linux-amd64.tar.gz
+
+ ls
+prometheus-2.34.0.linux-amd64  prometheus-2.34.0.linux-amd64.tar.gz
+ubuntu@ip-172-31-33-160:~$ cd prometheus-2.34.0.linux-amd64/
+ubuntu@ip-172-31-33-160:~/prometheus-2.34.0.linux-amd64$ ls
+LICENSE  console_libraries  prometheus      promtool
+NOTICE   consoles           prometheus.yml
+
+###edit prometheus.yml file
+ - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+
+  - job_name: 'jenkins'
+    metrics_path: /prometheus
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:8080']
+
+
+######
+./prometheus
+http://13.235.17.168:9090/                     ## prometheus
+
+#####################
+Grafana machine:
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise-8.4.4.linux-amd64.tar.gz
+ls
+tar -zxvf grafana-enterprise-8.4.4.linux-amd64.tar.gz
+ls
+cd grafana-8.4.4
+./bin/grafana-server
+
+http://13.235.17.168:3000/
+login: admin/admin
+
+---------------------------------------------------------------###########
+Add Prometheus Data Source in Grafana
+Grafana → Settings → Data Source → Prometheus
+URL:
+http://<prometheus-ip>:9090
+Click Save & Test → should turn green.
+________________________________________
+
+############3
+Inside grafana dashboards
+add panel
+
+🧱 Step 1: Create a New Dashboard
+
+Open Grafana
+
+Click Dashboards → New → New Panel
+
+Select Prometheus as data source
+
+📊 Panel 1 — CPU Utilization (%)
+
+Query:
+
+100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+
+Settings:
+
+Unit: Percentage (%)
+
+Visualization: Gauge or Time Series
+
+Set thresholds:
+
+Green: 0–60%
+
+Yellow: 60–80%
+
+Red: 80–100%
+
+Name it:
+
+Jenkins: CPU Usage
+----------------------------------------------------------------------------------------
+📊 Panel 2 — CPU Load Average
+avg(rate(node_cpu_seconds_total[1m])) without (mode)
+
+--Good to know if builds are overloading the server.
+----------------------------------------------------------------------------------------
+📊 Panel 3 — Memory Utilization (%)
+(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) 
+/ node_memory_MemTotal_bytes * 100
+
+
+Format: Percentage (%)
+
+Threshold hints:
+
+Green: 0–70%
+
+Yellow: 70–85%
+
+Red: 85–100%
+
+Name:
+
+Jenkins: Memory Usage
+----------------------------------------------------------------------------------------
+📊 Panel 4 — Memory Breakdown (Used vs Free)
+
+Used memory:
+
+node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+
+
+Free memory:
+
+node_memory_MemAvailable_bytes
+
+
+Visualization: Stacked Bar / Time Series
+----------------------------------------------------------------------------------------
+📊 Panel 5 — Disk Usage
+
+(Useful because Jenkins eats storage)
+
+(1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100
+
+
+Name:
+
+Root Disk Usage (%)
+---------------------------------------------------------------------
+
+PAnel new: jenkins
+default_jenkins_builds_available_builds_count{jenkins_job="project1"}   --> query
+
