@@ -47,43 +47,60 @@ http://13.235.17.168:8080/prometheus/
 --------------------------------------------------------------------------
 cd /opt
 ################node exporter ###########
+Node Exporter — Full Install Guide (Ubuntu / Debian)
 
- wget https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz
-ls
-node_exporter-1.10.2.linux-amd64.tar.gz
-root@ip-172-31-33-160:/opt# tar xvfz node_exporter-1.10.2.linux-amd64.tar.gz
+Assumes you have sudo on the machine and want node_exporter to run as a systemd service on port 9100.
 
- ls
-node_exporter-1.10.2.linux-amd64  node_exporter-1.10.2.linux-amd64.tar.gz
-root@ip-172-31-33-160:/opt# sudo mv node_exporter-*/node_exporter /usr/local/bin/
+1) Download the latest release
+cd /tmp
+# Using GitHub "latest" download link (safe pattern)
+wget https://github.com/prometheus/node_exporter/releases/latest/download/node_exporter-*.linux-amd64.tar.gz
+tar -xf node_exporter-*.linux-amd64.tar.gz
 
+
+If you prefer to pick a specific version, replace latest with the tag (e.g. v1.10.2) in the URL.
+
+2) Move binary to a global location
 sudo mv node_exporter-*/node_exporter /usr/local/bin/
+sudo chmod 755 /usr/local/bin/node_exporter
 
-root@ip-172-31-33-160:/opt# systemctl status node_exporter
+3) Create a dedicated user (non-login) and group
+sudo useradd --no-create-home --shell /usr/sbin/nologin --system node_exporter
+# or (older systems)
+# sudo useradd --no-create-home --shell /bin/false node_exporter
 
-systemctl start node_exporter
-root@ip-172-31-33-160:/opt# systemctl status node_exporter
-● node_exporter.service - Node Exporter
-     Loaded: loaded (/etc/systemd/system/node_exporter.service; enabled; preset: enabled)
-     Active: active (running) since Sat 2025-11-22 14:07:51 UTC; 1s ago
-   Main PID: 8316 (node_exporter)
-      Tasks: 4 (limit: 9296)
-     Memory: 5.7M (peak: 6.0M)
-        CPU: 27ms
-     CGroup: /system.slice/node_exporter.service
-             └─8316 /usr/local/bin/node_exporter
+4) Set ownership (optional but tidy)
+sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
 
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.055Z level=INFO source=node_exporter.go:141 msg=time
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=timex
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=udp_queues
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=uname
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=vmstat
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=watchdog
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=xfs
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=node_exporter.go:141 msg=zfs
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=tls_config.go:346 msg="Listening on" address=[::]:9100
-Nov 22 14:07:51 ip-172-31-33-160 node_exporter[8316]: time=2025-11-22T14:07:51.056Z level=INFO source=tls_config.go:349 msg="TLS is disabled." http2=false >
+5) Create systemd service file
+sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'EOF'
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
 
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter \
+  --web.listen-address=:9100 \
+  --web.telemetry-path=/metrics
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+6) Reload systemd, enable & start
+sudo systemctl daemon-reload
+sudo systemctl enable --now node_exporter
+sudo systemctl status node_exporter   # should show Active: active (running)
+
+7) Verify it’s working locally
+curl http://localhost:9100/metrics | head -n 20
+# or from another machine:
+curl http://<server-ip>:9100/metrics
 http://<jenkins-ip>:9100/metrics
 ---------------------
 ###############3Prometheus################3
